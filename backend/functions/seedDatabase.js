@@ -10,8 +10,9 @@ const db = admin.firestore()
 //1. Seed usuarios
 
 const roles = ['administrador', 'editor']
+
 const usuarioSeed = {
-    nombre:faker.person.firstName,
+    nombre:faker.person.firstName("male"),
     rol: faker.helpers.arrayElement(roles)
 }
 
@@ -19,23 +20,19 @@ const usuarioSeed = {
 
 
 
-
+//test - 16/01/2025
 
 exports.seedDatabase = functions.https.onRequest(async (req, res) => {
     // Genera datos de ejemplo
     const users = [];
-    for (let i = 0; i < 10; i++) {
-      users.push({
-        name: faker.name.findName(),
-        email: faker.internet.email(),
-        age: faker.datatype.number({ min: 18, max: 65 }),
-      });
+    for (let i = 0; i < 3; i++) {
+      users.push(usuarioSeed);
     }
   
     // Escribe los datos en Firestore
     const batch = db.batch();
     users.forEach(user => {
-      batch.set(db.collection('users').doc(), user);
+      batch.set(db.collection('usuarios').doc(), user);
     });
     await batch.commit();
   
