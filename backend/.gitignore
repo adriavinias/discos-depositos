@@ -68,4 +68,4 @@ node_modules/
 # dataconnect generated files
 .dataconnect
 
-.discos-depositos-firebase-adminsdk.json
+backend/discos-depositos-firebase-adminsdk.json
