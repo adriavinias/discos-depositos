@@ -6,7 +6,8 @@
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@schemas/*": ["../shared/schemas/*"],
     }
   },
   "include": [
