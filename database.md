@@ -19,6 +19,13 @@ Ventas
 - Cliente/Supplier ID (clave foránea, relación con Clientes/Suppliers)
 - Usuario ID (clave foránea, relación con Usuarios)
 
+Detalles Ventas
+- ID (clave primaria)
+- Cantidad
+- ProductoId (clave foránea, relación con Productos)
+- VentaId (clave foránea, relación con Ventas)
+- Subtotal
+ 
 Pagos
 - ID (clave primaria)
 - Fecha
