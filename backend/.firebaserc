@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "discos-depositos"
-  }
+    "default": "discos-depositos",
+    "depositos": "discos-depositos-a81a3"
+  },
+  "targets": {},
+  "etags": {}
 }

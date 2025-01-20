@@ -1,96 +1,51 @@
-import admin from 'firebase-admin';
-import {faker} from '@faker-js/faker'
+import functions from "firebase-functions";
+import admin from "firebase-admin";
+import {faker} from "@faker-js/faker";
+admin.initializeApp();
+const db = admin.firestore();
 
-import serviceAccount from '../discos-depositos-firebase-adminsdk.json' assert {type: 'json'};
+exports.seedDatabase = functions.https.onRequest(async (req, res) => {
+  try {
+    const batch = db.batch();
 
+    // Cantidad de documentos que quieres generar
+    const numClientes = 100;
+    const numProductosPorCliente = 10;
 
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-})
-const db = admin.firestore()
+    for (let i = 0; i < numClientes; i++) {
+      // Generar cliente
+      const clienteId = `cliente_${i}`;
+      const clienteData = {
+        nombre: faker.person.fullName(),
+        telefono: faker.phone.number(),
+        email: faker.internet.email(),
+        direccion: faker.location.streetAddress(),
+      };
 
+      const clienteRef = db.collection("clientes").doc(clienteId);
+      batch.set(clienteRef, clienteData);
 
-async function seedDatabase() {
-  console.log('Seeding Firestore...');
+      // Generar productos para este cliente
+      for (let j = 0; j < numProductosPorCliente; j++) {
+        const productoId = `producto_${i}_${j}`;
+        const productoData = {
+          nombre: faker.commerce.productName(),
+          descripcion: faker.commerce.productDescription(),
+          clienteId: clienteId,
+          precio_distribucion: faker.commerce.price(10, 50, 2),
+          pvp: faker.commerce.price(50, 100, 2),
+        };
 
-  // Crear clientes/suppliers
-  const clientes = [];
-  for (let i = 0; i < 10; i++) {
-    const cliente = {
-      id: faker.string.uuid(),
-      nombre: faker.company.name(),
-      telefono: faker.phone.number(),
-      email: faker.internet.email(),
-      direccion: faker.address.streetAddress(),
-    };
-    clientes.push(cliente);
-    await db.collection('clientes').doc(cliente.id).set(cliente);
-  }
-
-  // Crear productos
-  const productos = [];
-  for (let i = 0; i < 20; i++) {
-    const cliente = faker.faker.helpers.randomize(clientes);
-    const producto = {
-      id: faker.string.uuid(),
-      nombre: faker.commerce.productName(),
-      descripcion: faker.commerce.productDescription(),
-      clienteId: cliente.id,
-      precio_distribucion: faker.commerce.price(10, 100, 2),
-      pvp: faker.commerce.price(20, 200, 2),
-    };
-    productos.push(producto);
-    await db.collection('productos').doc(producto.id).set(producto);
-  }
-
-  // Crear lotes
-  const lotes = [];
-  for (let i = 0; i < 30; i++) {
-    const producto = faker.helpers.randomize(productos);
-    const lote = {
-      id: faker.string.uuid(),
-      productoId: producto.id,
-      clienteId: producto.clienteId,
-      cantidad: faker.datatype.number({ min: 10, max: 500 }),
-      fecha_ingreso: faker.date.past(),
-      estado: 'disponible',
-    };
-    lotes.push(lote);
-    await db.collection('lotes').doc(lote.id).set(lote);
-  }
-
-  // Crear ventas y asociarlas a lotes
-  for (let i = 0; i < 10; i++) {
-    const cliente = faker.helpers.randomize(clientes);
-    const venta = {
-      id: faker.string.uuid(),
-      clienteId: cliente.id,
-      fecha_venta: faker.date.recent(),
-      total: 0,
-    };
-    const ventaRef = db.collection('ventas').doc(venta.id);
-    await ventaRef.set(venta);
-
-    // Asociar lotes a la venta
-    const lotesVenta = faker.helpers.arrayElements(lotes, faker.faker.datatype.number({ min: 1, max: 3 }));
-    let totalVenta = 0;
-
-    for (const lote of lotesVenta) {
-      const cantidadVendida = faker.datatype.number({ min: 1, max: lote.cantidad });
-      totalVenta += cantidadVendida * faker.datatype.number({ min: 20, max: 200 });
-
-      await db.collection('ventas_lotes').add({
-        ventaId: venta.id,
-        loteId: lote.id,
-        cantidad: cantidadVendida,
-      });
+        const productoRef = db.collection("productos").doc(productoId);
+        batch.set(productoRef, productoData);
+      }
     }
 
-    // Actualizar el total de la venta
-    await ventaRef.update({ total: totalVenta });
+    // Ejecutar el batch
+    await batch.commit();
+    res.status(200).send("Base de datos inicializada");
+  } catch (error) {
+    console.error("Error al inicializar la base de datos:", error);
+    res.status(500).send("Error al inicializar la base de datos.");
   }
-
-  console.log('Seeding completado.');
-}
-
-seedDatabase().catch(console.error);
+});
